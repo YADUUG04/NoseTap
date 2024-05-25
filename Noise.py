@@ -5,6 +5,16 @@ import csv
 import matplotlib.pyplot as plt
 import streamlit as st
 
+# Hiding
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
 mp_face = mp.solutions.face_detection
 mp_hands = mp.solutions.hands
 
