@@ -24,7 +24,7 @@ hands = mp_hands.Hands(min_detection_confidence=0.2, min_tracking_confidence=0.2
 
 # Define Streamlit app
 def main():
-    st.title("Nose and Hand Detection")
+    st.title("Noise Tap Detection")
 
     # Get user input for video file upload
     uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
