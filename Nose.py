@@ -5,6 +5,9 @@ import csv
 import matplotlib.pyplot as plt
 import streamlit as st
 import numpy as np
+import tempfile
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 # Hiding Streamlit style
 hide_st_style = """
@@ -153,11 +156,47 @@ def main():
         # Plot the lap time progression
         if lap_timers:
             plt.plot(range(1, len(lap_timers) + 1), lap_timers, marker='o')
-            plt.xlabel('Lap Number')
+                        plt.xlabel('Lap Number')
             plt.ylabel('Lap Time (seconds)')
             plt.title('Lap Time Progression')
             st.pyplot(plt)
 
+        # Generate PDF report
+        generate_pdf_report(lap_timers, lap_counts, average_speed)
+
+        # Add a download button for the PDF report
+        st.download_button(
+            label="Download PDF Report",
+            data=open('noise_tap_report.pdf', 'rb'),
+            file_name="noise_tap_report.pdf",
+            mime="application/pdf"
+        )
+
+def generate_pdf_report(lap_timers, lap_counts, average_speed):
+    pdf_file_path = 'noise_tap_report.pdf'
+    c = canvas.Canvas(pdf_file_path, pagesize=letter)
+
+    # Title and user information
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(200, 750, "Noise Tap Detection Report")
+    c.setFont("Helvetica", 12)
+    c.drawString(50, 700, f"Total Lap Count: {lap_counts}")
+    c.drawString(50, 680, f"Average Lap Time: {np.mean(lap_timers):.2f} seconds")
+    c.drawString(50, 660, f"Average Speed: {average_speed:.2f} seconds per lap")
+
+    # Lap time progression graph
+    c.drawString(50, 620, "Lap Time Progression:")
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmpfile:
+        plt.plot(range(1, len(lap_timers) + 1), lap_timers, marker='o')
+        plt.xlabel('Lap Number')
+        plt.ylabel('Lap Time (seconds)')
+        plt.title('Lap Time Progression')
+        plt.savefig(tmpfile.name)
+        c.drawImage(tmpfile.name, 50, 350, width=500, height=250)
+
+    c.save()
+
 # Run the Streamlit app
 if __name__ == "__main__":
     main()
+
