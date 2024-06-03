@@ -19,8 +19,8 @@ mp_face = mp.solutions.face_detection
 mp_hands = mp.solutions.hands
 
 # Initialize Face Detection and Hands modules
-face_detection = mp_face.FaceDetection(min_detection_confidence=0.2)
-hands = mp_hands.Hands(min_detection_confidence=0.2, min_tracking_confidence=0.2)
+face_detection = mp_face.FaceDetection(min_detection_confidence=0.5)
+hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
 # Define Streamlit app
 def main():
