@@ -4,8 +4,9 @@ import time
 import csv
 import matplotlib.pyplot as plt
 import streamlit as st
+import numpy as np
 
-# Hiding
+# Hiding Streamlit style
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -19,8 +20,8 @@ mp_face = mp.solutions.face_detection
 mp_hands = mp.solutions.hands
 
 # Initialize Face Detection and Hands modules
-face_detection = mp_face.FaceDetection(min_detection_confidence=0.2)
-hands = mp_hands.Hands(min_detection_confidence=0.2, min_tracking_confidence=0.2)
+face_detection = mp_face.FaceDetection(min_detection_confidence=0.5)
+hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
 # Define Streamlit app
 def main():
@@ -42,10 +43,11 @@ def main():
         lap_start_time = None
 
         # Initialize variables for smoothing
-        smooth_factor = 0.5
+        smooth_factor = 0.2
         prev_ix, prev_iy, prev_nx, prev_ny = 0, 0, 0, 0
 
         csv_file_path = 'lap_times.csv'
+        stframe = st.empty()
 
         while cap.isOpened():
             ret, frame = cap.read()
@@ -58,6 +60,8 @@ def main():
 
             face_results = face_detection.process(rgb_frame)
             hands_results = hands.process(rgb_frame)
+
+            ix, iy, nx, ny = prev_ix, prev_iy, prev_nx, prev_ny
 
             if hands_results.multi_hand_landmarks:
                 # Find the hand with the highest confidence (first in the list)
@@ -89,7 +93,7 @@ def main():
                         if ((ix - nx) ** 2 + (iy - ny) ** 2) ** 0.5 < 30:
                             lap_end_time = time.time()
                             lap_timer = lap_end_time - lap_start_time
-                            if lap_timer > 1:  # Ignore very short durations
+                            if lap_timer > 0.2:  # Ignore very short durations
                                 lap_counts += 1
                                 lap_timers.append(lap_timer)
                                 lap_start_time = lap_end_time
@@ -113,15 +117,21 @@ def main():
             # Display lap timer in seconds, lap count, and average speed
             if lap_timers:
                 lap_timer = lap_timers[-1]
+                average_speed = np.mean(lap_timers) if lap_timers else 0
 
                 cv2.putText(frame, f"Lap Timer: {lap_timer:.2f} seconds", (20, 50),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 cv2.putText(frame, f"Lap Count: {lap_counts}", (20, 100),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                cv2.putText(frame, f"Average Speed: {average_speed:.2f} s/lap", (20, 150),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-                # Convert the frame to RGB for displaying with Streamlit
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Convert the frame to RGB for displaying with Streamlit
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            stframe.image(frame_rgb)
 
+        # Release the video capture object
+        cap.release()
 
         # Download button for CSV file
         if lap_timers:
@@ -136,11 +146,8 @@ def main():
                 mime="text/csv"
             )
 
-        # Release the video capture object
-        cap.release()
-
         # Calculate average lap time
-        average_speed = sum(lap_timers) / len(lap_timers) if len(lap_timers) > 0 else 0
+        average_speed = np.mean(lap_timers) if lap_timers else 0
         st.write(f"Average Lap Timer: {average_speed:.2f} seconds per lap")
 
         # Plot the lap time progression
@@ -154,4 +161,3 @@ def main():
 # Run the Streamlit app
 if __name__ == "__main__":
     main()
-
