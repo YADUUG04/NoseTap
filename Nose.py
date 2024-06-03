@@ -97,8 +97,8 @@ def main():
                             lap_end_time = time.time()
                             lap_timer = lap_end_time - lap_start_time
                             if lap_timer > 0.2:  # Ignore very short durations
-                                lap_counts += 1
-                                lap_timers.append(lap_timer)
+                                        lap_counts += 1
+                                        lap_timers.append(lap_timer)
                                 lap_start_time = lap_end_time
 
                         # Save current coordinates for smoothing
@@ -200,3 +200,5 @@ def generate_pdf_report(lap_timers, lap_counts, average_speed):
 if __name__ == "__main__":
     main()
 
+
+                                    
