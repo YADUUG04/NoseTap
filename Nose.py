@@ -23,6 +23,12 @@ mp_hands = mp.solutions.hands
 face_detection = mp_face.FaceDetection(min_detection_confidence=0.5)
 hands = mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
+# Authentication function
+def authenticate(username, password):
+    # Placeholder for authentication logic
+    # In practice, use a secure method to verify credentials
+    return username == "admin" and password == "password"
+
 # Define Streamlit app
 def main():
     st.title("Noise Tap Detection")
@@ -45,6 +51,10 @@ def main():
         # Initialize variables for smoothing
         smooth_factor = 0.2
         prev_ix, prev_iy, prev_nx, prev_ny = 0, 0, 0, 0
+
+        # Initialize cooldown variables
+        cooldown_period = 1.0  # Cooldown period in seconds
+        last_lap_time = None
 
         csv_file_path = 'lap_times.csv'
         stframe = st.empty()
@@ -92,11 +102,13 @@ def main():
                         # Check for lap completion
                         if ((ix - nx) ** 2 + (iy - ny) ** 2) ** 0.5 < 30:
                             lap_end_time = time.time()
-                            lap_timer = lap_end_time - lap_start_time
-                            if lap_timer > 0.2:  # Ignore very short durations
-                                lap_counts += 1
-                                lap_timers.append(lap_timer)
-                                lap_start_time = lap_end_time
+                            if last_lap_time is None or (lap_end_time - last_lap_time) > cooldown_period:
+                                lap_timer = lap_end_time - lap_start_time
+                                if lap_timer > 0.2:  # Ignore very short durations
+                                    lap_counts += 1
+                                    lap_timers.append(lap_timer)
+                                    lap_start_time = lap_end_time
+                                    last_lap_time = lap_end_time
 
                         # Save current coordinates for smoothing
                         prev_ix, prev_iy, prev_nx, prev_ny = ix, iy, nx, ny
@@ -158,6 +170,20 @@ def main():
             plt.title('Lap Time Progression')
             st.pyplot(plt)
 
-# Run the Streamlit app
+# Run the Streamlit app with authentication
 if __name__ == "__main__":
-    main()
+    if 'authenticated' not in st.session_state:
+        st.session_state['authenticated'] = False
+
+    if st.session_state['authenticated']:
+        main()
+    else:
+        st.title("Login")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.button("Login"):
+            if authenticate(username, password):
+                st.session_state['authenticated'] = True
+                st.experimental_rerun()
+            else:
+                st.error("Invalid username or password")
