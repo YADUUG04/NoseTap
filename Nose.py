@@ -34,7 +34,7 @@ def main():
     st.title("Noise Tap Detection")
 
     # Get user input for video file upload
-    uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
+    uploaded_file = st.file_uploader("Upload a video file", type=["mp4","mov"])
 
     if uploaded_file is not None:
         # Save the uploaded file to disk
